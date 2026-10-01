@@ -5,6 +5,8 @@
 // Optional:
 // - Secret/Variable: SUB_LINK_SECRET (legacy long-token compatibility)
 
+import { CLASH_RULES } from './clash-rules.js';
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data, null, 2), {
     status,
@@ -326,6 +328,34 @@ function renderClash(nodes) {
 
   const autoGroupMembers = proxyNames.length ? proxyNames : [`      - DIRECT`];
 
+  const serviceGroups = [
+    { name: 'ChatGPT', proxies: ['节点选择', '自动选择', 'DIRECT'] },
+    { name: 'Gemini', proxies: ['节点选择', '自动选择', 'DIRECT'] },
+    { name: 'Netflix', proxies: ['节点选择', '自动选择', 'DIRECT'] },
+    { name: '磁力下载', proxies: ['DIRECT'] },
+    { name: '哔哩哔哩', proxies: ['DIRECT', '节点选择'] },
+    { name: '抖音', proxies: ['DIRECT', '节点选择'] },
+    { name: 'Telegram', proxies: ['节点选择', '自动选择', 'DIRECT'] },
+    { name: 'TikTok', proxies: ['节点选择', '自动选择', 'DIRECT'] },
+    { name: 'Twitter', proxies: ['节点选择', '自动选择', 'DIRECT'] },
+    { name: 'WhatsApp', proxies: ['节点选择', '自动选择', 'DIRECT'] },
+    { name: 'Copilot', proxies: ['节点选择', '自动选择', 'DIRECT'] },
+    { name: '微软服务', proxies: ['DIRECT', '节点选择', '自动选择'] },
+    { name: '苹果服务', proxies: ['DIRECT', '节点选择', '自动选择'] },
+    { name: '谷歌服务', proxies: ['节点选择', '自动选择', 'DIRECT'] },
+    { name: 'Steam', proxies: ['节点选择', 'DIRECT', '自动选择'] },
+  ];
+
+  const serviceGroupLines = serviceGroups.flatMap(({ name, proxies: members }) => [
+    `  - name: "${escapeYaml(name)}"`,
+    `    type: select`,
+    `    proxies:`,
+    ...members.map((member) =>
+      member === 'DIRECT' ? `      - DIRECT` : `      - "${escapeYaml(member)}"`
+    ),
+    ``,
+  ]);
+
   return [
     `mixed-port: 7890`,
     `allow-lan: false`,
@@ -350,8 +380,9 @@ function renderClash(nodes) {
     `    proxies:`,
     ...allGroupMembers,
     ``,
+    ...serviceGroupLines,
     `rules:`,
-    `  - MATCH,节点选择`,
+    ...CLASH_RULES.map((rule) => `  - '${rule.replace(/'/g, "''")}'`),
   ].join('\n');
 }
 
